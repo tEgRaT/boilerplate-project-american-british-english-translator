@@ -51,7 +51,7 @@ suite('Unit Tests', () => {
         'The parking lot was full.',
         'american-to-british'
       ).translation,
-      'Everything looks good to me!'
+      'The <span class="highlight">car park</span> was full.'
     );
   });
 
@@ -82,6 +82,46 @@ suite('Unit Tests', () => {
         'american-to-british'
       ).translation,
       'No <span class="highlight">Mr</span> Bond, I expect you to die.'
+    );
+  });
+
+  test('Translate Dr. Grosh will see you now. to British English', () => {
+    assert.equal(
+      translator.translate(
+        'Dr. Grosh will see you now.',
+        'american-to-british'
+      ).translation,
+      '<span class="highlight">Dr</span> Grosh will see you now.'
+    );
+  });
+
+  test('Translate Lunch is at 12:15 today. to British English', () => {
+    assert.equal(
+      translator.translate(
+        'Lunch is at 12:15 today.',
+        'american-to-british'
+      ).translation,
+      'Lunch is at <span class="highlight">12.15</span> today.'
+    );
+  });
+
+  test('Translate We watched the footie match for a while. to American English', () => {
+    assert.equal(
+      translator.translate(
+        'We watched the footie match for a while.',
+        'british-to-american'
+      ).translation,
+      'We watched the <span class="highlight">soccer</span> match for a while.'
+    );
+  });
+
+  test('Translate Paracetamol takes up to an hour to work. to American English', () => {
+    assert.equal(
+      translator.translate(
+        'Paracetamol takes up to an hour to work.',
+        'british-to-american'
+      ).translation,
+      '<span class="highlight">Tylenol</span> takes up to an hour to work.'
     );
   });
 });

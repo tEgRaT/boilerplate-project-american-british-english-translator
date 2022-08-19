@@ -1,151 +1,87 @@
 const americanOnly = require('./american-only.js');
 const americanToBritishSpelling = require('./american-to-british-spelling.js');
-const americanToBritishTitles = require("./american-to-british-titles.js")
-const britishOnly = require('./british-only.js')
+const americanToBritishTitles = require("./american-to-british-titles.js");
+const britishOnly = require('./british-only.js');
 
 class Translator {
-  translate(text, locale) {
-    let translation = '';
-    // const textArr = this.grep(text);
-    const textArr = text.split(' ');
-    
-    translation =
-      locale === 'american-to-british' ?
-        textArr
-          .map((word, index) => {
-            const capitalized = word[0].toUpperCase() === word[0];
-            const testWord = word[0].toLowerCase().concat(word.slice(1)).toLowerCase();
-            let returnedWord = word;
-            let wordHasBeenTranslated = false;
-            
-            if (Object.keys(americanToBritishTitles).includes(testWord)) {
-              returnedWord = americanToBritishTitles[testWord];
-              wordHasBeenTranslated = true;
-            } else if (/^[0-9]{1,2}:[0-9]{1,2}$/g.test(testWord)) {
-              returnedWord = testWord.replace(':', '.');
-              wordHasBeenTranslated = true;
-            } else if (Object.keys(americanToBritishSpelling).includes(testWord)) {
-              returnedWord = americanToBritishSpelling[testWord];
-              wordHasBeenTranslated = true;
-            }  else if (Object.keys(americanOnly).includes(testWord)) {
-              returnedWord = americanOnly[testWord];
-              wordHasBeenTranslated = true;
-            } else {
-              const wordArr = this.grep(testWord);
+    translate(text, locale) {
+        let translation = '';
+        if (locale === 'american-to-british') {
+            translation = this.americanToBritish(text);
+        } else if (locale === 'british-to-american') {
+            translation = this.britishToAmerican(text);
+        } else {
+            return 'Invalid locale';
+        }
 
-              returnedWord = wordArr
-                .map(w => {
-                  if (Object.keys(americanOnly).includes(w)) {
-                    return this.classWrapper(americanOnly[w]);
-                  } else {
-                    return w;
-                  }
-                })
-                .join('');
-            }
+        if (translation === text) {
+            translation = 'Everything looks good to me!';
+        }
 
-            if (capitalized)
-              returnedWord = returnedWord[0].toUpperCase().concat(returnedWord.slice(1));
-
-            if (wordHasBeenTranslated)
-              returnedWord = this.classWrapper(returnedWord);
-            
-            return returnedWord;
-          })
-          .join(' ')
-          .replace(/\s+(\W)/g, "$1")
-          .replace(/(\w)(<span)/g, "$1 $2")
-        :
-        textArr
-          .map(word => {
-            const capitalized = word[0].toUpperCase() === word[0];
-            const testWord = word[0].toLowerCase().concat(word.slice(1)).toLowerCase();
-            let returnedWord = word;
-            let wordHasBeenTranslated = false;
-            
-            if (/^[0-9]{1,2}.[0-9]{1,2}$/g.test(testWord)) {
-              returnedWord = testWord.replace('.', ':');
-              wordHasBeenTranslated = true;
-            } else if (Object.values(americanToBritishSpelling).includes(testWord)) {
-              returnedWord = americanToBritishSpelling[
-                Object.keys(americanToBritishSpelling)
-                  .find(key => americanToBritishSpelling[key] === testWord)
-              ];
-              wordHasBeenTranslated = true;
-            } else if (Object.values(americanToBritishTitles).includes(testWord)) {
-              returnedWord = americanToBritishTitles[
-                Object.keys(americanToBritishTitles)
-                  .find(key => americanToBritishTitles[key] === testWord)
-              ];
-              wordHasBeenTranslated = true;
-            } else if (Object.keys(britishOnly).includes(testWord)) {
-              returnedWord = britishOnly[testWord];
-              wordHasBeenTranslated = true;
-            }
-
-            if (capitalized)
-              returnedWord = returnedWord[0].toUpperCase().concat(returnedWord.slice(1));
-
-            if (wordHasBeenTranslated)
-              returnedWord = this.classWrapper(returnedWord);
-            
-            return returnedWord;
-          })
-          .join(' ')
-          .replace(/\s+(\W)/g, '$1')
-          .replace(/(\w)(<span)/g, "$1 $2");
-
-    if (translation === text) translation = 'Everything looks good to me!';
-
-    return { translation, text };
-  }
-
-  classWrapper(str) {
-    return '<span class="highlight">'.concat(str, '</span>');
-  }
-
-  grep(str, filt) {
-    const punct = '\\[' + '\\!' + '\\"' + '\\#' + '\\$' +   // since javascript does not
-          '\\%' + '\\&' + '\\\'' + '\\(' + '\\)' +  // support POSIX character
-          '\\*' + '\\+' + '\\,' + '\\\\' + '\\-' +  // classes, we'll need our
-          '\\.' + '\\/' + '\\:' + '\\;' + '\\<' +   // own version of [:punct:]
-          '\\=' + '\\>' + '\\?' + '\\@' + '\\[' +
-          '\\]' + '\\^' + '\\_' + '\\`' + '\\{' +
-          '\\|' + '\\}' + '\\~' + '\\]';
-    const re = new RegExp(     // tokenizer
-       '\\s*' +            // discard possible leading whitespace
-       '(' +               // start capture group
-         '\\.{3}' +            // ellipsis (must appear before punct)
-       '|' +               // alternator
-         '\\w+\\-\\w+' +       // hyphenated words (must appear before punct)
-       '|' +               // alternator
-         '\\w+\'(?:\\w+)?' +   // compound words (must appear before punct)
-       '|' +               // alternator
-         '\\w+' +              // other words
-       '|' +               // alternator
-         '[' +
-      punct + ']' +        // punct
-       ')'                // end capture group
-     );
-// grep(ary[,filt]) - filters an array
-//   note: could use jQuery.grep() instead
-// @param {Array}    ary    array of members to filter
-// @param {Function} filt   function to test truthiness of member,
-//   if omitted, "function(member){ if(member) return member; }" is assumed
-// @returns {Array}  all members of ary where result of filter is truthy
-    let result = [];
-    const ary = str.split(re);
-    
-    for (let i = 0, len = ary.length; i++ < len;) {
-      let member = ary[i] || '';
-      
-      if (filt && (typeof filt === 'Function') ? filt(member) : member) {
-        result.push(member);
-      }
+        return { translation, text };
     }
-    
-    return result;
-  }
+
+    americanToBritish(text) {
+        return this.lookupDict(
+            this.lookupDict(
+                this.lookupDict(
+                    this.americanTimeToBritish(text),
+                    americanToBritishTitles
+                ),
+                americanToBritishSpelling
+            ),
+            americanOnly
+        );
+    }
+
+    americanTimeToBritish(text) {
+        return text.replace(/([0-9]{1,2}):([0-9]{1,2})/g, matched => this.classWrapper(matched.replace(':', '.')));
+    }
+
+    britishToAmerican(text) {
+        return this.lookupDict(
+            this.lookupDict(
+                this.lookupDict(
+                    this.britishTimeToAmerican(text),
+                    britishOnly
+                ),
+                americanToBritishTitles,
+                'value'
+            ),
+            americanToBritishSpelling,
+            'value'
+        );
+    }
+
+    britishTimeToAmerican(text) {
+        return text;
+    }
+
+    lookupDict(text, dict, keyValue = 'key') {
+        if (keyValue === 'value') {
+            return RegExp(Object.values(dict).join('|'), 'g').test(text) ? dict[text] : text;
+        } else {
+            return text.replace(
+                new RegExp(Object.keys(dict).sort((a, b) => b.length - a.length).join('|'), 'gi'),
+                matched => {
+                    let translated = dict[matched.toLowerCase()];
+                    return this.classWrapper(this.capitalized(matched) ? this.capitalize(translated) : translated);
+                }
+            );
+        }
+    }
+
+    classWrapper(text) {
+        return `<span class="highlight">${text}</span>`;
+    }
+
+    capitalize(text) {
+        return text[0].toUpperCase().concat(text.slice(1));
+    }
+
+    capitalized(text) {
+        return text[0].toUpperCase() === text[0];
+    }
 }
 
 module.exports = Translator;
