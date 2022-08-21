@@ -43,23 +43,29 @@ class Translator {
             this.lookupDict(
                 this.lookupDict(
                     this.britishTimeToAmerican(text),
-                    britishOnly
+                    americanToBritishTitles,
+                    'value'
                 ),
-                americanToBritishTitles,
+                americanToBritishSpelling,
                 'value'
             ),
-            americanToBritishSpelling,
-            'value'
+            britishOnly
         );
     }
 
     britishTimeToAmerican(text) {
-        return text;
+        return text.replace(/([0-9]{1,2}).([0-9]{1,2})/g, matched => this.classWrapper(matched.replace('.', ':')));
     }
 
     lookupDict(text, dict, keyValue = 'key') {
         if (keyValue === 'value') {
-            return RegExp(Object.values(dict).join('|'), 'g').test(text) ? dict[text] : text;
+            return text.replace(
+                new RegExp(Object.values(dict).sort((a, b) => b.length - a.length).join('|'), 'gi'),
+                matched => {
+                    const translated = Object.keys(dict).find(key => dict[key].toLowerCase() === matched.toLowerCase());
+                    return this.classWrapper(this.capitalized(matched) ? this.capitalize(translated) : translated);
+                }
+            );
         } else {
             return text.replace(
                 new RegExp(Object.keys(dict).sort((a, b) => b.length - a.length).join('|'), 'gi'),
