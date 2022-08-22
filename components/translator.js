@@ -62,19 +62,34 @@ class Translator {
             return text.replace(
                 new RegExp(Object.values(dict).sort((a, b) => b.length - a.length).join('|'), 'gi'),
                 matched => {
-                    const translated = Object.keys(dict).find(key => dict[key].toLowerCase() === matched.toLowerCase());
-                    return this.classWrapper(this.capitalized(matched) ? this.capitalize(translated) : translated);
+                    const nextChar = this.getNextChar(matched, text);
+                    const translated = (/\w/.test(nextChar) && nextChar !== undefined) ?
+                        matched :
+                        Object.keys(dict).find(key => dict[key].toLowerCase() === matched.toLowerCase());
+                    return translated === matched ?
+                        translated :
+                        this.classWrapper(this.capitalized(matched) ? this.capitalize(translated) : translated);
                 }
             );
         } else {
             return text.replace(
                 new RegExp(Object.keys(dict).sort((a, b) => b.length - a.length).join('|'), 'gi'),
                 matched => {
-                    let translated = dict[matched.toLowerCase()];
-                    return this.classWrapper(this.capitalized(matched) ? this.capitalize(translated) : translated);
+                    const nextChar = this.getNextChar(matched, text);
+                    const translated = (/\w/.test(nextChar) && nextChar !== undefined) ?
+                        matched :
+                        dict[matched.toLowerCase()];
+                    return translated === matched ?
+                        translated :
+                        this.classWrapper(this.capitalized(matched) ? this.capitalize(translated) : translated);
                 }
             );
         }
+    }
+
+    getNextChar(word, sentence) {
+        const index = sentence.indexOf(word);
+        return sentence[index + word.length];
     }
 
     classWrapper(text) {
